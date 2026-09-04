@@ -1196,6 +1196,9 @@
         const delBtn = item.querySelector('.fm-btn-del-font');
         delBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
+          const fontName = fontItem.family || fontItem.name;
+          const confirmed = confirm(`Delete "${fontName}" from your font library?\n\nThis cannot be undone.`);
+          if (!confirmed) return;
           await this.deleteStoredFont(fontItem.id);
         });
 
@@ -1219,6 +1222,9 @@
       this.updateFontStatusBanner(fontRecord.name, reg.metadata);
       this.renderVariableAxes();
       this.renderUploadedFontsList();
+
+      // Ensure canvas re-renders immediately after font is ready in the browser
+      await document.fonts.ready;
       this.renderer.render(store.state, 1, false);
     }
 
@@ -1433,6 +1439,16 @@
      */
     async processAndStoreFont(buffer, fileName, autoActivate = true) {
       try {
+        // --- Deduplication: skip if a font with the same filename already exists ---
+        const existingFont = this.storedFonts.find(f => f.name === fileName);
+        if (existingFont) {
+          console.info(`Font "${fileName}" is already in the library — skipping duplicate.`);
+          if (autoActivate) {
+            await this.activateFont(existingFont);
+          }
+          return existingFont;
+        }
+
         const reg = await fontEngine.registerFont(buffer, fileName);
 
         const fontRecord = {
