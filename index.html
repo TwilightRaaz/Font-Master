@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Font Master — Studio-Grade Typography & Font Preview</title>
+  <meta name="description" content="Professional typography preview studio. Upload custom fonts, customize weights, variations, gradients, 3D shadows, and export in PNG, JPEG, WEBP, and pure vector SVG.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="bg-obsidian text-slate-100 font-sans antialiased overflow-hidden">
+  
+  <!-- App Container -->
+  <div id="app" class="flex flex-col h-screen w-screen overflow-hidden">
+    
+    <!-- Top Navigation Header -->
+    <header class="h-14 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-4 flex items-center justify-between z-30 select-none">
+      <div class="flex items-center space-x-3">
+        <button id="btn-toggle-sidebar" class="md:hidden p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" aria-label="Toggle Controls Menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <span class="font-extrabold text-white text-base tracking-tighter">Fm</span>
+          </div>
+          <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent hidden sm:inline-block">
+            Font Master
+          </span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 font-mono">PRO</span>
+        </div>
+
+        <div class="h-5 w-px bg-slate-800 hidden sm:block"></div>
+
+        <!-- Current Font Badge -->
+        <div id="font-badge" class="hidden sm:flex items-center space-x-2 px-2.5 py-1 rounded-md bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="badge-font-name" class="font-medium max-w-[140px] truncate">Inter</span>
+          <span id="badge-font-type" class="text-slate-500 font-mono text-[10px]">Variable</span>
+        </div>
+      </div>
+
+      <!-- Center History & Zoom Tools -->
+      <div class="flex items-center space-x-1 sm:space-x-2">
+        <button id="btn-undo" class="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:pointer-events-none transition" title="Undo (Ctrl+Z)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v2M3 10l6-6m-6 6l6 6"/></svg>
+        </button>
+        <button id="btn-redo" class="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:pointer-events-none transition" title="Redo (Ctrl+Y)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a5 5 0 00-5 5v2m15-7l-6-6m6 6l-6 6"/></svg>
+        </button>
+
+        <div class="h-4 w-px bg-slate-800 mx-1"></div>
+
+        <!-- Zoom Controls -->
+        <button id="btn-zoom-out" class="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition" title="Zoom Out">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+        </button>
+        <span id="zoom-level-text" class="text-xs font-mono text-slate-400 w-11 text-center select-none">100%</span>
+        <button id="btn-zoom-in" class="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition" title="Zoom In">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        </button>
+        <button id="btn-zoom-fit" class="hidden sm:inline-flex px-2 py-1 rounded text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          Fit
+        </button>
+      </div>
+
+      <!-- Right Action CTA -->
+      <div class="flex items-center space-x-2">
+        <button id="btn-open-export" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-medium text-xs sm:text-sm shadow-md shadow-violet-500/25 transition transform active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Export</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="flex flex-1 overflow-hidden relative">
+      
+      <!-- Left Sidebar Controls -->
+      <aside id="sidebar-controls" class="w-full md:w-[380px] lg:w-[420px] bg-slate-900/95 border-r border-slate-800 flex flex-col z-20 transition-transform duration-300 absolute md:static inset-y-0 left-0 -translate-x-full md:translate-x-0 h-full overflow-hidden shadow-2xl md:shadow-none">
+        
+        <!-- Sidebar Navigation Tabs -->
+        <div class="flex border-b border-slate-800 bg-slate-950/60 p-1.5 space-x-1 overflow-x-auto scrollbar-none select-none">
+          <button class="sidebar-tab active" data-tab="tab-text">
+            <span>Font & Text</span>
+          </button>
+          <button class="sidebar-tab" data-tab="tab-style">
+            <span>Typography</span>
+          </button>
+          <button class="sidebar-tab" data-tab="tab-color">
+            <span>Color & Stroke</span>
+          </button>
+          <button class="sidebar-tab" data-tab="tab-effects">
+            <span>Shadow & 3D</span>
+          </button>
+          <button class="sidebar-tab" data-tab="tab-advanced">
+            <span>Advanced</span>
+          </button>
+          <button class="sidebar-tab" data-tab="tab-canvas">
+            <span>Artboard</span>
+          </button>
+        </div>
+
+        <!-- Sidebar Tab Panels (Scrollable) -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+          
+          <!-- TAB 1: FONT & TEXT -->
+          <div id="tab-text" class="tab-panel active space-y-4">
+            <!-- Font Upload Dropzone -->
+            <div class="section-card">
+              <label class="section-title">Font File Upload</label>
+              <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-violet-500 rounded-xl p-4 text-center cursor-pointer bg-slate-950/40 hover:bg-slate-900/60 transition group">
+                <input type="file" id="font-file-input" accept=".ttf,.otf,.woff,.woff2" class="hidden">
+                <div class="flex flex-col items-center justify-center space-y-2">
+                  <div class="w-10 h-10 rounded-full bg-violet-600/15 group-hover:bg-violet-600/25 flex items-center justify-center text-violet-400 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                  </div>
+                  <div>
+                    <span class="text-xs font-semibold text-slate-200 group-hover:text-white">Upload Custom Font</span>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Drag & drop or click to choose (.ttf, .otf, .woff, .woff2)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preset Fonts Selector -->
+            <div class="section-card">
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="section-title mb-0">Curated Font Presets</label>
+                <span class="text-[11px] text-slate-500">Google / System</span>
+              </div>
+              <select id="select-curated-font" class="input-select w-full"></select>
+            </div>
+
+            <!-- Text Content Area -->
+            <div class="section-card">
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="section-title mb-0">Preview Text</label>
+                <!-- Quick Sample Selector -->
+                <select id="select-sample-text" class="text-[11px] bg-slate-800 text-slate-300 rounded border border-slate-700 px-2 py-0.5 focus:outline-none">
+                  <option value="">Sample Pangrams...</option>
+                </select>
+              </div>
+              <textarea id="text-input" rows="4" class="input-textarea w-full font-mono text-sm resize-y" placeholder="Type your text here..."></textarea>
+            </div>
+
+            <!-- Writing Mode & Orientation -->
+            <div class="section-card">
+              <label class="section-title">Writing Mode & Flow</label>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="label-xs">Writing Mode</label>
+                  <select id="select-writing-mode" class="input-select">
+                    <option value="horizontal-tb">Horizontal (LTR/RTL)</option>
+                    <option value="vertical-rl">Vertical (Right-to-Left)</option>
+                    <option value="vertical-lr">Vertical (Left-to-Right)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-xs">Text Orientation</label>
+                  <select id="select-text-orientation" class="input-select">
+                    <option value="mixed">Mixed</option>
+                    <option value="upright">Upright</option>
+                    <option value="sideways">Sideways</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: TYPOGRAPHY CONTROLS -->
+          <div id="tab-style" class="tab-panel space-y-4">
+            
+            <!-- Font Size -->
+            <div class="control-row">
+              <div class="flex justify-between items-center">
+                <label class="control-label">Font Size</label>
+                <div class="flex items-center space-x-1">
+                  <input type="number" id="input-font-size" min="8" max="400" value="64" class="num-input">
+                  <span class="text-xs text-slate-500">px</span>
+                </div>
+              </div>
+              <input type="range" id="range-font-size" min="12" max="240" value="64" class="range-slider">
+            </div>
+
+            <!-- Font Weight -->
+            <div class="control-row">
+              <div class="flex justify-between items-center">
+                <label class="control-label">Font Weight</label>
+                <span id="label-font-weight" class="text-xs font-mono text-violet-400">800 (Extra Bold)</span>
+              </div>
+              <input type="range" id="range-font-weight" min="100" max="900" step="100" value="800" class="range-slider">
+              <div class="flex justify-between text-[10px] text-slate-500 px-0.5">
+                <span>100 Thin</span>
+                <span>400 Reg</span>
+                <span>700 Bold</span>
+                <span>900 Black</span>
+              </div>
+            </div>
+
+            <!-- Font Style & Stretch -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="label-xs">Font Style</label>
+                <select id="select-font-style" class="input-select">
+                  <option value="normal">Normal</option>
+                  <option value="italic">Italic</option>
+                  <option value="oblique">Oblique</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-xs">Font Stretch</label>
+                <select id="select-font-stretch" class="input-select">
+                  <option value="50%">Ultra Condensed (50%)</option>
+                  <option value="75%">Condensed (75%)</option>
+                  <option value="100%" selected>Normal (100%)</option>
+                  <option value="125%">Expanded (125%)</option>
+                  <option value="150%">Ultra Expanded (150%)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Alignment Buttons -->
+            <div class="control-row">
+              <label class="control-label mb-1.5">Text Alignment</label>
+              <div class="grid grid-cols-4 gap-1.5 bg-slate-950/60 p-1 rounded-lg border border-slate-800">
+                <button class="btn-toggle text-align-btn" data-align="left" title="Align Left">
+                  <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h14"/></svg>
+                </button>
+                <button class="btn-toggle text-align-btn active" data-align="center" title="Align Center">
+                  <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M7 12h10M5 18h14"/></svg>
+                </button>
+                <button class="btn-toggle text-align-btn" data-align="right" title="Align Right">
+                  <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M10 12h10M6 18h14"/></svg>
+                </button>
+                <button class="btn-toggle text-align-btn" data-align="justify" title="Justify">
+                  <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Line Height (Leading) -->
+            <div class="control-row">
+              <div class="flex justify-between items-center">
+                <label class="control-label">Line Height (Leading)</label>
+                <span id="label-line-height" class="text-xs font-mono text-slate-400">1.15x</span>
+              </div>
+              <input type="range" id="range-line-height" min="0.6" max="3.0" step="0.05" value="1.15" class="range-slider">
+            </div>
+
+            <!-- Letter Spacing (Tracking) -->
+            <div class="control-row">
+              <div class="flex justify-between items-center">
+                <label class="control-label">Letter Spacing (Tracking)</label>
+                <span id="label-letter-spacing" class="text-xs font-mono text-slate-400">2 px</span>
+              </div>
+              <input type="range" id="range-letter-spacing" min="-10" max="60" step="1" value="2" class="range-slider">
+            </div>
+
+            <!-- Word Spacing & Paragraph Spacing -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="label-xs">Word Spacing</label>
+                  <span id="label-word-spacing" class="text-[10px] font-mono text-slate-400">0px</span>
+                </div>
+                <input type="range" id="range-word-spacing" min="-10" max="50" step="1" value="0" class="range-slider">
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="label-xs">Paragraph Spacing</label>
+                  <span id="label-para-spacing" class="text-[10px] font-mono text-slate-400">24px</span>
+                </div>
+                <input type="range" id="range-para-spacing" min="0" max="100" step="2" value="24" class="range-slider">
+              </div>
+            </div>
+
+            <!-- Text Transform & Kerning -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="label-xs">Text Transform</label>
+                <select id="select-text-transform" class="input-select">
+                  <option value="none" selected>None</option>
+                  <option value="uppercase">UPPERCASE</option>
+                  <option value="lowercase">lowercase</option>
+                  <option value="capitalize">Capitalize</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-xs">Kerning</label>
+                <select id="select-kerning" class="input-select">
+                  <option value="normal" selected>Normal</option>
+                  <option value="none">None</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Font Variant & Vertical Align -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="label-xs">Font Variant</label>
+                <select id="select-font-variant" class="input-select">
+                  <option value="normal" selected>Normal</option>
+                  <option value="small-caps">Small Caps</option>
+                  <option value="all-small-caps">All Small Caps</option>
+                  <option value="tabular-nums">Tabular Nums</option>
+                  <option value="oldstyle-nums">Oldstyle Nums</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-xs">Vertical Alignment</label>
+                <select id="select-vertical-align" class="input-select">
+                  <option value="top">Top</option>
+                  <option value="center" selected>Center</option>
+                  <option value="bottom">Bottom</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- First Line Indent & White Space -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="label-xs">First-line Indent</label>
+                  <span id="label-text-indent" class="text-[10px] font-mono text-slate-400">0px</span>
+                </div>
+                <input type="range" id="range-text-indent" min="-20" max="100" step="2" value="0" class="range-slider">
+              </div>
+              <div>
+                <label class="label-xs">White Space</label>
+                <select id="select-white-space" class="input-select">
+                  <option value="pre-wrap" selected>Pre-Wrap</option>
+                  <option value="normal">Normal</option>
+                  <option value="nowrap">Nowrap</option>
+                  <option value="pre-line">Pre-Line</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: COLOR, FILL & STROKE -->
+          <div id="tab-color" class="tab-panel space-y-4">
+            <!-- Fill Mode Tabs -->
+            <div class="section-card">
+              <label class="section-title">Text Fill Mode</label>
+              <div class="grid grid-cols-3 gap-1.5 bg-slate-950/60 p-1 rounded-lg border border-slate-800 mb-3">
+                <button class="btn-toggle fill-mode-btn" data-mode="solid">Solid</button>
+                <button class="btn-toggle fill-mode-btn active" data-mode="linear-gradient">Linear</button>
+                <button class="btn-toggle fill-mode-btn" data-mode="radial-gradient">Radial</button>
+              </div>
+
+              <!-- Solid Color Controls -->
+              <div id="solid-color-controls" class="hidden space-y-3">
+                <div class="flex items-center space-x-3">
+                  <input type="color" id="picker-solid-color" value="#ffffff" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0">
+                  <input type="text" id="input-solid-hex" value="#FFFFFF" class="input-text font-mono uppercase text-xs w-28">
+                </div>
+                <!-- Swatches -->
+                <div class="flex space-x-2 pt-1">
+                  <button class="swatch-btn" data-color="#ffffff" style="background:#ffffff;"></button>
+                  <button class="swatch-btn" data-color="#00f0ff" style="background:#00f0ff;"></button>
+                  <button class="swatch-btn" data-color="#ff007f" style="background:#ff007f;"></button>
+                  <button class="swatch-btn" data-color="#ffe259" style="background:#ffe259;"></button>
+                  <button class="swatch-btn" data-color="#10b981" style="background:#10b981;"></button>
+                  <button class="swatch-btn" data-color="#a855f7" style="background:#a855f7;"></button>
+                  <button class="swatch-btn" data-color="#f97316" style="background:#f97316;"></button>
+                </div>
+              </div>
+
+              <!-- Gradient Controls -->
+              <div id="gradient-controls" class="space-y-3">
+                <div>
+                  <label class="label-xs">Designer Presets</label>
+                  <div class="grid grid-cols-3 gap-2" id="gradient-presets-grid"></div>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="label-xs">Gradient Angle</label>
+                    <span id="label-gradient-angle" class="text-xs font-mono text-slate-400">45°</span>
+                  </div>
+                  <input type="range" id="range-gradient-angle" min="0" max="360" step="5" value="45" class="range-slider">
+                </div>
+              </div>
+            </div>
+
+            <!-- Opacity -->
+            <div class="control-row">
+              <div class="flex justify-between items-center">
+                <label class="control-label">Overall Text Opacity</label>
+                <span id="label-opacity" class="text-xs font-mono text-slate-400">100%</span>
+              </div>
+              <input type="range" id="range-opacity" min="0" max="100" step="1" value="100" class="range-slider">
+            </div>
+
+            <!-- Text Stroke / Outline -->
+            <div class="section-card space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="section-title mb-0">Text Stroke / Outline</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="check-stroke-enable">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div id="stroke-options" class="space-y-3 pt-2 border-t border-slate-800 opacity-50 pointer-events-none transition">
+                <div class="flex justify-between items-center">
+                  <label class="label-xs">Stroke Width</label>
+                  <span id="label-stroke-width" class="text-xs font-mono text-slate-400">2 px</span>
+                </div>
+                <input type="range" id="range-stroke-width" min="1" max="40" step="1" value="2" class="range-slider">
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="label-xs">Stroke Color</label>
+                    <div class="flex items-center space-x-2">
+                      <input type="color" id="picker-stroke-color" value="#00f0ff" class="w-8 h-8 rounded cursor-pointer bg-transparent border-0">
+                      <input type="text" id="input-stroke-hex" value="#00F0FF" class="input-text font-mono uppercase text-xs">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="label-xs">Line Join</label>
+                    <select id="select-stroke-join" class="input-select">
+                      <option value="round" selected>Round</option>
+                      <option value="bevel">Bevel</option>
+                      <option value="miter">Miter</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="label-xs">Layering Order</label>
+                  <select id="select-stroke-order" class="input-select">
+                    <option value="stroke-first" selected>Fill over Stroke (Crisp)</option>
+                    <option value="fill-first">Stroke over Fill (Fat)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Text Decoration -->
+            <div class="section-card space-y-3">
+              <label class="section-title">Text Decoration</label>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="label-xs">Decoration Line</label>
+                  <select id="select-deco-line" class="input-select">
+                    <option value="none" selected>None</option>
+                    <option value="underline">Underline</option>
+                    <option value="overline">Overline</option>
+                    <option value="line-through">Line-Through</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-xs">Line Style</label>
+                  <select id="select-deco-style" class="input-select">
+                    <option value="solid" selected>Solid</option>
+                    <option value="double">Double</option>
+                    <option value="dotted">Dotted</option>
+                    <option value="dashed">Dashed</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="label-xs">Thickness</label>
+                  <input type="range" id="range-deco-thickness" min="1" max="12" step="1" value="2" class="range-slider">
+                </div>
+                <div>
+                  <label class="label-xs">Line Color</label>
+                  <div class="flex items-center space-x-2">
+                    <input type="color" id="picker-deco-color" value="#ffffff" class="w-8 h-8 rounded cursor-pointer bg-transparent border-0">
+                    <input type="text" id="input-deco-hex" value="#FFFFFF" class="input-text font-mono uppercase text-xs">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: SHADOWS, GLOW & 3D -->
+          <div id="tab-effects" class="tab-panel space-y-4">
+            
+            <!-- Shadow Presets -->
+            <div class="section-card">
+              <label class="section-title">Shadow & Glow Presets</label>
+              <div class="grid grid-cols-2 gap-2" id="shadow-presets-grid"></div>
+            </div>
+
+            <!-- Custom Shadow Layer Editor -->
+            <div class="section-card space-y-3">
+              <div class="flex justify-between items-center">
+                <label class="section-title mb-0">Custom Shadow Layer</label>
+                <button id="btn-reset-shadow" class="text-xs text-rose-400 hover:text-rose-300">Clear</button>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="label-xs">Offset X</label>
+                    <span id="label-shadow-x" class="text-[10px] font-mono text-slate-400">0px</span>
+                  </div>
+                  <input type="range" id="range-shadow-x" min="-50" max="50" step="1" value="0" class="range-slider">
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="label-xs">Offset Y</label>
+                    <span id="label-shadow-y" class="text-[10px] font-mono text-slate-400">8px</span>
+                  </div>
+                  <input type="range" id="range-shadow-y" min="-50" max="50" step="1" value="8" class="range-slider">
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="label-xs">Blur Radius</label>
+                  <span id="label-shadow-blur" class="text-[10px] font-mono text-slate-400">20px</span>
+                </div>
+                <input type="range" id="range-shadow-blur" min="0" max="80" step="1" value="20" class="range-slider">
+              </div>
+
+              <div>
+                <label class="label-xs">Shadow Color</label>
+                <div class="flex items-center space-x-2">
+                  <input type="color" id="picker-shadow-color" value="#000000" class="w-8 h-8 rounded cursor-pointer bg-transparent border-0">
+                  <input type="text" id="input-shadow-hex" value="#000000" class="input-text font-mono uppercase text-xs w-28">
+                </div>
+              </div>
+            </div>
+
+            <!-- Drop Cap Customization -->
+            <div class="section-card space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="section-title mb-0">Initial Drop Cap</label>
+                  <p class="text-[11px] text-slate-400">Enlarge first letter of the first paragraph</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="check-dropcap-enable">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div id="dropcap-options" class="space-y-3 pt-2 border-t border-slate-800 opacity-50 pointer-events-none transition">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="label-xs">Spanned Lines</label>
+                    <select id="select-dropcap-lines" class="input-select">
+                      <option value="2">2 Lines</option>
+                      <option value="3" selected>3 Lines</option>
+                      <option value="4">4 Lines</option>
+                      <option value="5">5 Lines</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="label-xs">Drop Cap Color</label>
+                    <input type="color" id="picker-dropcap-color" value="#00f0ff" class="w-full h-8 rounded cursor-pointer bg-transparent border-0">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: ADVANCED & MICRO-ADJUSTMENTS -->
+          <div id="tab-advanced" class="tab-panel space-y-4">
+            
+            <!-- Font Micro-Adjustments -->
+            <div class="section-card space-y-3">
+              <div class="flex justify-between items-center">
+                <label class="section-title mb-0">Micro-Adjustments & Transform</label>
+                <button id="btn-reset-micro" class="text-[11px] text-violet-400 hover:text-violet-300">Reset</button>
+              </div>
+
+              <!-- Baseline Shift -->
+              <div class="control-row">
+                <div class="flex justify-between items-center">
+                  <label class="label-xs">Baseline Shift</label>
+                  <span id="label-micro-baseline" class="text-[10px] font-mono text-slate-400">0 px</span>
+                </div>
+                <input type="range" id="range-micro-baseline" min="-60" max="60" step="1" value="0" class="range-slider">
+              </div>
+
+              <!-- Glyph Scale X & Y -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="label-xs">Glyph Scale X</label>
+                    <span id="label-micro-scalex" class="text-[10px] font-mono text-slate-400">100%</span>
+                  </div>
+                  <input type="range" id="range-micro-scalex" min="50" max="180" step="5" value="100" class="range-slider">
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="label-xs">Glyph Scale Y</label>
+                    <span id="label-micro-scaley" class="text-[10px] font-mono text-slate-400">100%</span>
+                  </div>
+                  <input type="range" id="range-micro-scaley" min="50" max="180" step="5" value="100" class="range-slider">
+                </div>
+              </div>
+
+              <!-- Slant/Skew & Rotation -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="label-xs">Slant / Skew</label>
+                    <span id="label-micro-slant" class="text-[10px] font-mono text-slate-400">0°</span>
+                  </div>
+                  <input type="range" id="range-micro-slant" min="-45" max="45" step="1" value="0" class="range-slider">
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="label-xs">Canvas Rotation</label>
+                    <span id="label-micro-rotate" class="text-[10px] font-mono text-slate-400">0°</span>
+                  </div>
+                  <input type="range" id="range-micro-rotate" min="-180" max="180" step="1" value="0" class="range-slider">
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Variable Font Axes -->
+            <div id="variable-axes-card" class="section-card space-y-3 hidden">
+              <div class="flex justify-between items-center">
+                <label class="section-title mb-0">Variable Font Axes</label>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">fvar detected</span>
+              </div>
+              <div id="variable-axes-container" class="space-y-3"></div>
+            </div>
+
+            <!-- OpenType Feature Settings -->
+            <div class="section-card space-y-3">
+              <label class="section-title">OpenType Feature Settings</label>
+              <div id="opentype-features-container" class="grid grid-cols-2 gap-2 text-xs"></div>
+            </div>
+
+            <!-- Rendering & Engine Tweaks -->
+            <div class="section-card space-y-3">
+              <label class="section-title">Engine & Rasterization</label>
+              
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="label-xs">Font Smoothing</label>
+                  <select id="select-font-smoothing" class="input-select">
+                    <option value="antialiased" selected>Antialiased</option>
+                    <option value="subpixel-antialiased">Subpixel</option>
+                    <option value="none">None (Pixelated)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-xs">Text Rendering</label>
+                  <select id="select-text-rendering" class="input-select">
+                    <option value="optimizeLegibility" selected>Optimize Legibility</option>
+                    <option value="geometricPrecision">Geometric Precision</option>
+                    <option value="optimizeSpeed">Optimize Speed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="label-xs">Font Optical Sizing</label>
+                  <select id="select-optical-sizing" class="input-select">
+                    <option value="auto" selected>Auto</option>
+                    <option value="none">None</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-xs">Font Display</label>
+                  <select id="select-font-display" class="input-select">
+                    <option value="swap" selected>Swap</option>
+                    <option value="auto">Auto</option>
+                    <option value="block">Block</option>
+                    <option value="fallback">Fallback</option>
+                    <option value="optional">Optional</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 6: ARTBOARD & CANVAS -->
+          <div id="tab-canvas" class="tab-panel space-y-4">
+            
+            <!-- Aspect Ratio Presets -->
+            <div class="section-card">
+              <label class="section-title">Artboard Aspect Ratio</label>
+              <div class="grid grid-cols-3 gap-2 mb-3">
+                <button class="aspect-btn active" data-ratio="auto">Auto-Fit</button>
+                <button class="aspect-btn" data-ratio="1:1">1:1 Square</button>
+                <button class="aspect-btn" data-ratio="16:9">16:9 Banner</button>
+                <button class="aspect-btn" data-ratio="9:16">9:16 Story</button>
+                <button class="aspect-btn" data-ratio="4:5">4:5 Social</button>
+                <button class="aspect-btn" data-ratio="custom">Custom WxH</button>
+              </div>
+
+              <!-- Custom Dimensions -->
+              <div id="custom-dimensions-controls" class="hidden grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label class="label-xs">Width (px)</label>
+                  <input type="number" id="input-canvas-width" value="1200" min="200" max="4000" class="input-text">
+                </div>
+                <div>
+                  <label class="label-xs">Height (px)</label>
+                  <input type="number" id="input-canvas-height" value="630" min="200" max="4000" class="input-text">
+                </div>
+              </div>
+            </div>
+
+            <!-- Canvas Padding -->
+            <div class="control-row">
+              <div class="flex justify-between items-center">
+                <label class="control-label">Canvas Padding</label>
+                <span id="label-canvas-padding" class="text-xs font-mono text-slate-400">60 px</span>
+              </div>
+              <input type="range" id="range-canvas-padding" min="10" max="180" step="5" value="60" class="range-slider">
+            </div>
+
+            <!-- Background Mode -->
+            <div class="section-card space-y-3">
+              <label class="section-title">Background Style</label>
+              <div class="grid grid-cols-3 gap-1.5 bg-slate-950/60 p-1 rounded-lg border border-slate-800">
+                <button class="btn-toggle bg-mode-btn active" data-mode="checkerboard">Transparent</button>
+                <button class="btn-toggle bg-mode-btn" data-mode="solid">Solid</button>
+                <button class="btn-toggle bg-mode-btn" data-mode="gradient">Gradient</button>
+              </div>
+
+              <!-- Solid BG Color -->
+              <div id="bg-solid-controls" class="hidden flex items-center space-x-3 pt-2">
+                <input type="color" id="picker-bg-color" value="#090b10" class="w-9 h-9 rounded cursor-pointer bg-transparent border-0">
+                <input type="text" id="input-bg-hex" value="#090B10" class="input-text font-mono uppercase text-xs w-28">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Center Preview Stage Viewport -->
+      <main id="viewport" class="flex-1 relative overflow-hidden flex items-center justify-center bg-slate-950/80 select-none">
+        
+        <!-- Canvas Stage Wrapper with Zoom Transform -->
+        <div id="canvas-container" class="relative transition-transform duration-75 flex items-center justify-center p-8">
+          <canvas id="preview-canvas" class="shadow-2xl rounded-sm max-w-none"></canvas>
+        </div>
+
+        <!-- Floating Stage Toolbar (Bottom Center) -->
+        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center space-x-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/60 py-1.5 px-3 rounded-full shadow-2xl z-10 text-xs text-slate-300">
+          <span id="badge-dimensions" class="font-mono text-slate-400 text-[11px] px-2 py-0.5 rounded bg-slate-800">1200 x 630</span>
+          <div class="h-4 w-px bg-slate-700"></div>
+          <button id="btn-recenter" class="hover:text-white transition flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <span>Recenter</span>
+          </button>
+        </div>
+      </main>
+
+    </div>
+
+    <!-- Export Modal Dialog -->
+    <div id="export-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+      <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 transform scale-95 transition-transform duration-200" id="export-modal-card">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-violet-600/20 text-violet-400 flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-white tracking-tight">Export Typography</h3>
+          </div>
+          <button id="btn-close-export" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Format Selector Cards -->
+        <div class="space-y-2">
+          <label class="label-xs">Select Output Format</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button class="export-fmt-card active" data-fmt="png">
+              <span class="fmt-name">PNG</span>
+              <span class="fmt-tag">Lossless</span>
+            </button>
+            <button class="export-fmt-card" data-fmt="jpeg">
+              <span class="fmt-name">JPEG</span>
+              <span class="fmt-tag">Photo</span>
+            </button>
+            <button class="export-fmt-card" data-fmt="webp">
+              <span class="fmt-name">WEBP</span>
+              <span class="fmt-tag">Modern</span>
+            </button>
+            <button class="export-fmt-card" data-fmt="svg">
+              <span class="fmt-name">SVG</span>
+              <span class="fmt-tag">Vector</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Resolution Scale (PNG/JPEG/WEBP) -->
+        <div id="export-scale-group" class="space-y-1.5">
+          <div class="flex justify-between items-center">
+            <label class="label-xs">Resolution Multiplier</label>
+            <span id="label-export-res" class="text-xs font-mono text-violet-400">2x Retina (2400 x 1260)</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <button class="export-scale-btn" data-scale="1">1x Standard</button>
+            <button class="export-scale-btn active" data-scale="2">2x Retina</button>
+            <button class="export-scale-btn" data-scale="3">3x Sharp</button>
+            <button class="export-scale-btn" data-scale="4">4x Ultra-HD</button>
+          </div>
+        </div>
+
+        <!-- SVG Vector Option -->
+        <div id="export-svg-group" class="space-y-1.5 hidden">
+          <label class="label-xs">SVG Generation Mode</label>
+          <select id="select-svg-mode" class="input-select">
+            <option value="paths" selected>Pure Vector Path Outlines (Universal / No Font Needed)</option>
+            <option value="embedded">Standard SVG with &lt;text&gt;</option>
+          </select>
+        </div>
+
+        <!-- File Name -->
+        <div>
+          <label class="label-xs">File Name</label>
+          <input type="text" id="input-export-filename" value="font-master" class="input-text text-sm">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-2 pt-2">
+          <button id="btn-download-action" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-violet-500/25 transition transform active:scale-98 flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span id="download-btn-text">Download PNG</span>
+          </button>
+
+          <button id="btn-copy-clipboard" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium text-xs transition flex items-center justify-center space-x-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span id="copy-btn-text">Copy to Clipboard</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Local Offline Opentype.js Script -->
+  <script src="vendor/opentype.min.js"></script>
+
+  <!-- ES6 Application Bootstrap -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
