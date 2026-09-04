@@ -94,6 +94,10 @@
           <button class="fm-tab-btn" data-panel="panel-effects">Shadow & 3D</button>
           <button class="fm-tab-btn" data-panel="panel-advanced">Advanced</button>
           <button class="fm-tab-btn" data-panel="panel-canvas">Artboard</button>
+          <button class="fm-tab-btn" data-panel="panel-library">
+            <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:3px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            Library
+          </button>
         </nav>
 
         <!-- Tab Content Scrollable Container -->
@@ -656,7 +660,69 @@
 
           </div>
 
+          <!-- TAB 7: FONT LIBRARY -->
+          <div id="panel-library" class="fm-tab-panel">
+
+            <!-- Library Header + Upload -->
+            <div class="fm-card">
+              <div class="fm-card-header">
+                <span class="fm-card-title">Font Library</span>
+                <span id="fm-lib-total-badge" class="fm-pro-pill" style="font-size:9px;">0 FONTS</span>
+              </div>
+              <div class="fm-upload-actions">
+                <button id="fm-lib-btn-browse" class="fm-btn-browse">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  <span>Add Fonts to Library...</span>
+                </button>
+              </div>
+              <input type="file" id="fm-lib-file-input" accept=".ttf,.otf,.woff,.woff2,.zip" multiple style="display:none;">
+            </div>
+
+            <!-- Folder / Category Management -->
+            <div class="fm-card">
+              <div class="fm-card-header">
+                <span class="fm-card-title">Folders</span>
+                <button id="fm-lib-btn-new-folder" class="fm-btn" style="padding:3px 9px;font-size:10px;display:flex;align-items:center;gap:4px;">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  New Folder
+                </button>
+              </div>
+              <div id="fm-lib-folders-list" class="fm-lib-folders-list">
+                <!-- Folders rendered by JS -->
+              </div>
+            </div>
+
+            <!-- Fonts in selected folder -->
+            <div class="fm-card" id="fm-lib-fonts-card">
+              <div class="fm-card-header">
+                <span class="fm-card-title" id="fm-lib-current-folder-title">All Fonts</span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span id="fm-lib-folder-count-badge" class="fm-pro-pill" style="font-size:9px;">0</span>
+                  <select id="fm-lib-sort-select" class="fm-input-select" style="font-size:10px;padding:3px 6px;width:auto;">
+                    <option value="name">Sort: Name</option>
+                    <option value="date">Sort: Newest</option>
+                    <option value="size">Sort: Size</option>
+                  </select>
+                </div>
+              </div>
+              <div class="fm-search-wrap">
+                <svg class="fm-search-icon" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" id="fm-lib-search-input" class="fm-search-input" placeholder="Search fonts...">
+              </div>
+              <div id="fm-lib-fonts-list" class="fm-font-list fm-scrollbar">
+                <div class="fm-empty-fonts">Select a folder or upload fonts to your library.</div>
+              </div>
+            </div>
+
+          </div><!-- /panel-library -->
+
+        </div><!-- /fm-tab-content -->
+
+        <!-- Resize Handle (drag to resize sidebar width) -->
+        <div id="fm-sidebar-resize-handle" class="fm-sidebar-resize-handle" title="Drag to resize panel">
+          <div class="fm-resize-grip"></div>
         </div>
+
       </aside>
 
       <!-- Center Preview Viewport -->
