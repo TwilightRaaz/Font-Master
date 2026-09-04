@@ -1,5 +1,9 @@
 # Font Master ✦ Studio-Grade Typography & Font Preview
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-twilightraaz.github.io%2FFont--Master-8b5cf6?style=for-the-badge&logo=github&logoColor=white)](https://twilightraaz.github.io/Font-Master/)
+
+> 🌐 **Try it live → [twilightraaz.github.io/Font-Master](https://twilightraaz.github.io/Font-Master/)**
+
 Font Master is a studio-grade typography design, font inspection, and high-DPI export web application. Upload custom font files (`.ttf`, `.otf`, `.woff`, `.woff2`) or `.zip` font archives, compose live typography with granular micro-adjustments, manage your local font library without logins, and export your typographic art as **PNG**, **JPEG**, **WEBP**, and **Pure Vector SVG** paths.
 
 ---
@@ -9,7 +13,8 @@ Font Master is a studio-grade typography design, font inspection, and high-DPI e
 ### 📦 Font Archive & Local Storage (No Login Required)
 - **ZIP File Support**: Upload an entire `.zip` font package. Font Master automatically extracts all `.ttf`, `.otf`, `.woff`, and `.woff2` font variants (Regular, Bold, Italic, Light, etc.) in seconds.
 - **Local IndexedDB Font Library**: All uploaded fonts are safely stored directly in your browser's local IndexedDB. Your fonts persist across page refreshes and browser restarts without requiring any account or login.
-- **One-Click Font Switching**: Switch between any of your stored fonts instantly from the sidebar gallery. Delete unwanted fonts with one click.
+- **One-Click Font Switching**: Switch between any of your stored fonts instantly from the sidebar gallery. Delete unwanted fonts with one click (with confirmation prompt).
+- **No Duplicate Fonts**: Re-uploading a font that's already in your library is automatically detected and skipped — keeping your library clean.
 - **Direct & Drag-and-Drop Uploads**:
   - Dedicated **"Choose Font or Zip..."** browse button for quick selection.
   - Interactive **Drag & Drop** zone with glowing border response.
@@ -54,14 +59,21 @@ Open **`http://localhost:3000`** in your browser.
 
 ---
 
-## 🌐 Deploying to GitHub & Vercel
+## 🌐 Live Demo & Deployment
+
+The app is live on GitHub Pages:
+
+**→ [https://twilightraaz.github.io/Font-Master/](https://twilightraaz.github.io/Font-Master/)**
+
+To deploy your own fork:
 
 ```bash
 cd font-master
-git remote add origin https://github.com/YOUR_USERNAME/font-master.git
+git remote add origin https://github.com/YOUR_USERNAME/Font-Master.git
 git push -u origin main
 ```
-Import the repository on [vercel.com](https://vercel.com) (Framework: **Other**, Root: `./`). All dependencies (`opentype.min.js`, `jszip.min.js`, CSS) are self-contained locally, so deployment is instant with zero configuration.
+
+Then enable **GitHub Pages** in your repository settings (Source: `main` branch, root `/`). All dependencies (`opentype.min.js`, `jszip.min.js`, CSS) are self-contained locally, so deployment is instant with zero configuration.
 
 ---
 
