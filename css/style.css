@@ -1124,3 +1124,56 @@ html, body {
   font-size: 11px;
   line-height: 1.6;
 }
+
+/* ==========================================================================
+   Font Search Bar Component
+   ========================================================================== */
+.fm-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.fm-search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--fm-text-muted);
+  pointer-events: none;
+}
+
+.fm-search-input {
+  width: 100%;
+  background: var(--fm-bg-input);
+  border: 1px solid var(--fm-border-subtle);
+  border-radius: var(--fm-radius-sm);
+  color: var(--fm-text-title);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 7px 28px 7px 30px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+.fm-search-input:focus {
+  border-color: var(--fm-accent-violet);
+  box-shadow: 0 0 0 1px var(--fm-accent-violet);
+}
+.fm-search-input::placeholder {
+  color: var(--fm-text-muted);
+}
+
+.fm-search-clear-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--fm-text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+.fm-search-clear-btn:hover {
+  color: var(--fm-text-title);
+}
