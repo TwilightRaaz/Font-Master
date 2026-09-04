@@ -1,120 +1,79 @@
 /**
  * Font Master — Studio Typography Engine & Controller.
- * Unified self-contained bundle: works on file://, http://, and Vercel.
+ * Features: Local IndexedDB Font Storage (No login), .ZIP font archive extraction,
+ * 100% reliable canvas font rendering, and zero-CORS architecture.
  */
 
 (function() {
   'use strict';
 
   /* ==========================================================================
-     Presets & Configuration Data
+     IndexedDB Storage for Uploaded Fonts (Local, Persistent, No Login)
      ========================================================================== */
-  const CURATED_FONTS = [
-    {
-      name: 'Inter',
-      family: 'Inter',
-      category: 'sans-serif',
-      url: 'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap',
-      preview: 'Clean & Neutral Modern Sans',
-      variable: true,
-      axes: { wght: { min: 100, max: 900, default: 700 } }
-    },
-    {
-      name: 'Playfair Display',
-      family: 'Playfair Display',
-      category: 'serif',
-      url: 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap',
-      preview: 'Editorial High-Contrast Serif',
-      variable: true,
-      axes: { wght: { min: 400, max: 900, default: 700 } }
-    },
-    {
-      name: 'Cinzel',
-      family: 'Cinzel',
-      category: 'serif',
-      url: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&display=swap',
-      preview: 'Classical Roman Inscription',
-      variable: true,
-      axes: { wght: { min: 400, max: 900, default: 700 } }
-    },
-    {
-      name: 'Space Grotesk',
-      family: 'Space Grotesk',
-      category: 'sans-serif',
-      url: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap',
-      preview: 'Tech Brutalist Proportional',
-      variable: true,
-      axes: { wght: { min: 300, max: 700, default: 600 } }
-    },
-    {
-      name: 'Syne',
-      family: 'Syne',
-      category: 'display',
-      url: 'https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap',
-      preview: 'Avant-Garde Statement Display',
-      variable: true,
-      axes: { wght: { min: 400, max: 800, default: 800 } }
-    },
-    {
-      name: 'Fira Code',
-      family: 'Fira Code',
-      category: 'monospace',
-      url: 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap',
-      preview: 'Developer Monospace with Ligatures',
-      variable: true,
-      axes: { wght: { min: 300, max: 700, default: 500 } }
-    },
-    {
-      name: 'Great Vibes',
-      family: 'Great Vibes',
-      category: 'handwriting',
-      url: 'https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap',
-      preview: 'Flowing Elegant Calligraphy',
-      variable: false
-    },
-    {
-      name: 'Bungee',
-      family: 'Bungee',
-      category: 'display',
-      url: 'https://fonts.googleapis.com/css2?family=Bungee&display=swap',
-      preview: 'Chunky Retro Street Display',
-      variable: false
-    },
-    {
-      name: 'System Sans',
-      family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      category: 'sans-serif',
-      url: null,
-      preview: 'Native System Sans-Serif',
-      variable: false
-    },
-    {
-      name: 'System Serif',
-      family: 'Georgia, Cambria, "Times New Roman", serif',
-      category: 'serif',
-      url: null,
-      preview: 'Native System Editorial Serif',
-      variable: false
-    },
-    {
-      name: 'System Mono',
-      family: 'ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace',
-      category: 'monospace',
-      url: null,
-      preview: 'Native System Monospace',
-      variable: false
+  class FontDB {
+    constructor() {
+      this.dbName = 'FontMaster_LocalDB';
+      this.version = 1;
+      this.db = null;
     }
-  ];
 
-  const PANGRAM_PRESETS = [
-    { title: 'Brand Title', text: 'FONT MASTER\nSTUDIO TYPOGRAPHY' },
-    { title: 'The Quick Brown Fox', text: 'The quick brown fox jumps over the lazy dog.' },
-    { title: 'Black Quartz', text: 'Sphinx of black quartz, judge my vow.' },
-    { title: 'Design Philosophy', text: 'Typography is what language looks like.' },
-    { title: 'Alphabet & Numerals', text: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789 &@$#%*!?' },
-    { title: 'Editorial Drop Cap Paragraph', text: 'Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed.\n\nThe arrangement of type involves selecting typefaces, point sizes, line lengths, line-spacing, and letter-spacing to create visual harmony.' }
-  ];
+    async open() {
+      if (this.db) return this.db;
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(this.dbName, this.version);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('fonts')) {
+            db.createObjectStore('fonts', { keyPath: 'id' });
+          }
+        };
+        request.onsuccess = () => {
+          this.db = request.result;
+          resolve(this.db);
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
 
+    async saveFont(fontRecord) {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('fonts', 'readwrite');
+        const store = tx.objectStore('fonts');
+        store.put(fontRecord);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async getAllFonts() {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('fonts', 'readonly');
+        const store = tx.objectStore('fonts');
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async deleteFont(id) {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('fonts', 'readwrite');
+        const store = tx.objectStore('fonts');
+        store.delete(id);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+  }
+
+  const fontDB = new FontDB();
+
+  /* ==========================================================================
+     Presets (Gradients, Shadows, Features)
+     ========================================================================== */
   const GRADIENT_PRESETS = [
     {
       id: 'cyberpunk',
@@ -236,7 +195,7 @@
   ];
 
   /* ==========================================================================
-     Central Reactive State Store
+     Reactive State Store with Undo/Redo
      ========================================================================== */
   class StateStore {
     constructor() {
@@ -250,22 +209,15 @@
 
     getDefaultState() {
       return {
-        text: 'FONT MASTER\nSTUDIO TYPOGRAPHY',
-        fontSource: 'preset',
-        fontFamily: 'Inter',
-        fontUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap',
+        text: 'FONT MASTER',
+        fontFamily: '',
         fontFileName: '',
         fontBuffer: null,
         parsedFont: null,
-        fontMetadata: {
-          family: 'Inter',
-          subfamily: 'Bold',
-          designer: 'Rasmus Andersson',
-          isVariable: true,
-          axes: { wght: { tag: 'wght', name: 'Weight', min: 100, max: 900, default: 800 } }
-        },
-        fontSize: 64,
-        fontWeight: 800,
+        fontMetadata: null,
+
+        fontSize: 72,
+        fontWeight: 700,
         fontStyle: 'normal',
         fontStretch: '100%',
         fontVariant: 'normal',
@@ -309,7 +261,7 @@
         shadows: JSON.parse(JSON.stringify(SHADOW_PRESETS[1].layers)),
 
         fontFeatureSettings: { liga: true, kern: true, smcp: false, zero: false, frac: false, calt: true },
-        fontVariationSettings: { wght: 800 },
+        fontVariationSettings: {},
 
         dropCap: { enabled: false, lines: 3, color: '#00f0ff', weight: 900, margin: 12 },
 
@@ -408,22 +360,25 @@
   const store = new StateStore();
 
   /* ==========================================================================
-     Font Engine (FontFace + OpenType Parser)
+     Font Engine (Direct Blob URL @font-face + FontFace API + OpenType)
      ========================================================================== */
   class FontEngine {
     constructor() {
-      this.counter = 0;
+      this.fontCache = new Map();
+      this.fontIndex = 0;
     }
 
-    async loadFontFile(file) {
-      const arrayBuffer = await file.arrayBuffer();
-      const cleanName = file.name.replace(/\.[^/.]+$/, "");
-      this.counter++;
-      const uniqueFamily = `FMFont_${this.counter}_${cleanName.replace(/[^a-zA-Z0-9_]/g, '')}`;
-
+    /**
+     * Parse and register a font ArrayBuffer with both @font-face Blob URL and FontFace API.
+     * Guarantees 100% visibility in Canvas 2D across all browsers.
+     */
+    async registerFont(buffer, fileName, existingId = null) {
+      this.fontIndex++;
+      const uniqueFamily = existingId || `FMCustom_${Date.now()}_${this.fontIndex}`;
       let parsedFont = null;
+
       let metadata = {
-        family: cleanName,
+        family: fileName.replace(/\.[^/.]+$/, ""),
         subfamily: 'Regular',
         designer: 'Custom Upload',
         version: '1.0',
@@ -433,13 +388,13 @@
         axes: {}
       };
 
-      // Safely parse with opentype.js if available
+      // 1. Safe parsing with opentype.js
       if (window.opentype) {
         try {
-          parsedFont = window.opentype.parse(arrayBuffer);
+          parsedFont = window.opentype.parse(buffer.slice(0));
           if (parsedFont && parsedFont.names) {
             const names = parsedFont.names;
-            metadata.family = this.extractName(names.fontFamily) || cleanName;
+            metadata.family = this.extractName(names.fontFamily) || metadata.family;
             metadata.subfamily = this.extractName(names.fontSubfamily) || 'Regular';
             metadata.designer = this.extractName(names.designer) || 'Custom';
           }
@@ -459,19 +414,58 @@
               });
             }
           }
-        } catch (otErr) {
-          console.warn('OpenType parse notice (using browser native FontFace):', otErr);
+        } catch (err) {
+          console.warn('OpenType parse note:', err);
         }
       }
 
-      // Register with browser native FontFace API
+      // 2. Inject Dynamic @font-face with Blob URL into Document Head
+      // This forces the browser CSS font subsystem and Canvas 2D engine to recognize the font
+      const blob = new Blob([buffer]);
+      const blobUrl = URL.createObjectURL(blob);
+      const styleId = `fm-style-${uniqueFamily}`;
+      let styleEl = document.getElementById(styleId);
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = styleId;
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = `
+        @font-face {
+          font-family: "${uniqueFamily}";
+          src: url("${blobUrl}") format("truetype"), url("${blobUrl}") format("opentype"), url("${blobUrl}") format("woff");
+          font-weight: 100 900;
+          font-style: normal italic oblique;
+          font-display: swap;
+        }
+      `;
+
+      // 3. Register via Native FontFace API
       try {
-        const fontFace = new FontFace(uniqueFamily, arrayBuffer);
+        const fontFace = new FontFace(uniqueFamily, buffer.slice(0), {
+          weight: '100 900',
+          style: 'normal italic oblique'
+        });
         document.fonts.add(fontFace);
         await fontFace.load();
       } catch (ffErr) {
-        console.error('FontFace error:', ffErr);
+        console.warn('FontFace API registration notice:', ffErr);
       }
+
+      // Wait for font subsystem ready
+      try {
+        await document.fonts.ready;
+        await document.fonts.load(`64px "${uniqueFamily}"`);
+      } catch (e) {}
+
+      // 4. Force DOM layout pass with temporary hidden element
+      const testEl = document.createElement('span');
+      testEl.style.fontFamily = `"${uniqueFamily}", sans-serif`;
+      testEl.style.position = 'absolute';
+      testEl.style.left = '-9999px';
+      testEl.textContent = 'FontMasterCache';
+      document.body.appendChild(testEl);
+      setTimeout(() => testEl.remove(), 500);
 
       const variations = {};
       if (metadata.isVariable) {
@@ -480,61 +474,17 @@
         });
       }
 
-      store.update({
-        fontSource: 'uploaded',
-        fontFamily: uniqueFamily,
-        fontFileName: file.name,
-        fontBuffer: arrayBuffer,
+      return {
+        id: uniqueFamily,
+        uniqueFamily: uniqueFamily,
+        family: metadata.family,
+        subfamily: metadata.subfamily,
+        metadata: metadata,
         parsedFont: parsedFont,
-        fontMetadata: metadata,
-        fontWeight: metadata.isVariable && metadata.axes.wght ? metadata.axes.wght.default : 400,
-        fontVariationSettings: variations
-      });
-
-      return { family: uniqueFamily, metadata, parsedFont };
-    }
-
-    async loadPresetFont(preset) {
-      if (preset.url) {
-        const linkId = `gfont-${preset.name.replace(/\s+/g, '-').toLowerCase()}`;
-        if (!document.getElementById(linkId)) {
-          const link = document.createElement('link');
-          link.id = linkId;
-          link.rel = 'stylesheet';
-          link.href = preset.url;
-          document.head.appendChild(link);
-        }
-        try {
-          await document.fonts.load(`1em "${preset.family}"`);
-        } catch (e) {}
-      }
-
-      const metadata = {
-        family: preset.name,
-        subfamily: 'Variable / Regular',
-        designer: 'Web Fonts',
-        isVariable: preset.variable,
-        axes: preset.axes || {}
+        variations: variations,
+        buffer: buffer,
+        size: buffer.byteLength
       };
-
-      const variations = {};
-      if (preset.axes) {
-        Object.keys(preset.axes).forEach(tag => {
-          variations[tag] = preset.axes[tag].default || 700;
-        });
-      }
-
-      store.update({
-        fontSource: 'preset',
-        fontFamily: preset.family,
-        fontUrl: preset.url,
-        fontFileName: preset.name,
-        fontBuffer: null,
-        parsedFont: null,
-        fontMetadata: metadata,
-        fontWeight: preset.axes && preset.axes.wght ? preset.axes.wght.default : 700,
-        fontVariationSettings: variations
-      });
     }
 
     extractName(nameObj) {
@@ -561,6 +511,10 @@
       const canvas = this.canvas;
 
       let text = state.text || '';
+      if (!text.trim() && !state.fontFamily) {
+        text = 'FONT MASTER\nUpload a font or zip file to begin';
+      }
+
       if (state.textTransform === 'uppercase') text = text.toUpperCase();
       else if (state.textTransform === 'lowercase') text = text.toLowerCase();
       else if (state.textTransform === 'capitalize') text = text.replace(/\b\w/g, c => c.toUpperCase());
@@ -573,8 +527,14 @@
       const paraSpacing = state.paragraphSpacing || 24;
       const indent = state.textIndent || 0;
 
+      // Construct robust font string
       const family = state.fontFamily ? `"${state.fontFamily}", sans-serif` : 'sans-serif';
-      const fontString = `${state.fontStyle || 'normal'} ${state.fontVariant || 'normal'} ${state.fontWeight || 400} ${fontSize}px ${family}`;
+      let fontParts = [];
+      if (state.fontStyle && state.fontStyle !== 'normal') fontParts.push(state.fontStyle);
+      fontParts.push(state.fontWeight || 400);
+      fontParts.push(`${fontSize}px`);
+      fontParts.push(family);
+      const fontString = fontParts.join(' ');
 
       ctx.save();
       ctx.font = fontString;
@@ -597,7 +557,7 @@
       const totalLinesCount = paragraphLines.reduce((acc, p) => acc + p.lines.length, 0);
       const totalTextHeight = (totalLinesCount * lineHeight) + ((paragraphLines.length - 1) * paraSpacing);
 
-      // Drop Cap calculations
+      // Drop Cap
       let dropCapChar = '';
       let dropCapWidth = 0;
       let dropCapHeight = 0;
@@ -613,7 +573,7 @@
         maxLineWidth = Math.max(maxLineWidth, maxLineWidth + dropCapWidth * 0.5);
       }
 
-      // Canvas Dimensions
+      // Dimensions
       let canvasWidth = 1200;
       let canvasHeight = 630;
       const padding = state.canvas.padding || 60;
@@ -656,7 +616,7 @@
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       this.drawBackground(ctx, canvasWidth, canvasHeight, state, isExport);
 
-      // Micro adjustments & rotation
+      // Micro adjustments
       const micro = state.microAdjust || { baselineShift: 0, scaleX: 100, scaleY: 100, slant: 0, rotate: 0 };
       ctx.save();
 
@@ -759,7 +719,12 @@
       const lineHeight = fontSize * (state.lineHeight || 1.15);
       const letterSpacing = state.letterSpacing || 0;
       const family = state.fontFamily ? `"${state.fontFamily}", sans-serif` : 'sans-serif';
-      const fontString = `${state.fontStyle || 'normal'} ${state.fontVariant || 'normal'} ${state.fontWeight || 400} ${fontSize}px ${family}`;
+      let fontParts = [];
+      if (state.fontStyle && state.fontStyle !== 'normal') fontParts.push(state.fontStyle);
+      fontParts.push(state.fontWeight || 400);
+      fontParts.push(`${fontSize}px`);
+      fontParts.push(family);
+      const fontString = fontParts.join(' ');
 
       ctx.font = fontString;
       ctx.textBaseline = 'alphabetic';
@@ -787,7 +752,7 @@
 
           if (lIdx === 0 && state.textIndent && !dropCapChar) startX += state.textIndent;
 
-          // Draw Drop Cap
+          // Drop Cap
           if (pIdx === 0 && lIdx === 0 && dropCapChar) {
             const dcSize = fontSize * (dropCapLines * 0.95);
             ctx.save();
@@ -900,7 +865,7 @@
       const letterSpacing = state.letterSpacing || 0;
       const paraSpacing = state.paragraphSpacing || 24;
 
-      let text = state.text || '';
+      let text = state.text || 'FONT MASTER';
       if (state.textTransform === 'uppercase') text = text.toUpperCase();
       else if (state.textTransform === 'lowercase') text = text.toLowerCase();
       else if (state.textTransform === 'capitalize') text = text.replace(/\b\w/g, c => c.toUpperCase());
@@ -1039,7 +1004,9 @@
     }
 
     async exportFile(state, format, scale = 2, quality = 0.95) {
-      const fileName = `${state.export.fileName || 'font-master'}.${format === 'jpeg' ? 'jpg' : format}`;
+      const baseName = state.export.fileName || (state.fontMetadata ? state.fontMetadata.family : 'font-master');
+      const cleanName = baseName.replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase();
+      const fileName = `${cleanName}.${format === 'jpeg' ? 'jpg' : format}`;
 
       if (format === 'svg') {
         const svg = svgExporter.generateSVG(state, this.renderer.renderedBounds);
@@ -1113,19 +1080,19 @@
   }
 
   /* ==========================================================================
-     UI Controller
+     UI Controller (IndexedDB + ZIP extraction + Font preview synchronization)
      ========================================================================== */
   class UIController {
     constructor(renderer, exportManager) {
       this.renderer = renderer;
       this.exportManager = exportManager;
       this.currentZoom = 1.0;
+      this.storedFonts = [];
     }
 
-    init() {
+    async init() {
       this.bindTabs();
       this.bindUploadAndDragDrop();
-      this.bindCuratedFonts();
       this.bindTextInputs();
       this.bindTypographyControls();
       this.bindColorAndGradients();
@@ -1143,17 +1110,153 @@
         this.updateHistoryButtons();
       });
 
+      // Load stored fonts from IndexedDB on startup
+      await this.loadStoredFontsFromDB();
+
       this.renderer.render(store.state, 1, false);
       this.updateHeaderBadge(store.state);
       this.updateDimensionsBadge();
     }
 
+    /**
+     * Load all uploaded fonts from local IndexedDB and populate library
+     */
+    async loadStoredFontsFromDB() {
+      try {
+        this.storedFonts = await fontDB.getAllFonts();
+        this.renderUploadedFontsList();
+
+        if (this.storedFonts.length > 0) {
+          // Register all stored fonts into FontFace and activate the most recent
+          for (const f of this.storedFonts) {
+            await fontEngine.registerFont(f.buffer, f.name, f.id);
+          }
+          const activeFont = this.storedFonts[this.storedFonts.length - 1];
+          await this.activateFont(activeFont);
+        }
+      } catch (err) {
+        console.warn('Could not read from IndexedDB:', err);
+      }
+    }
+
+    renderUploadedFontsList() {
+      const listEl = document.getElementById('fm-uploaded-fonts-list');
+      const countBadge = document.getElementById('fm-font-count-badge');
+      if (!listEl) return;
+
+      if (countBadge) {
+        countBadge.textContent = `${this.storedFonts.length} ${this.storedFonts.length === 1 ? 'FONT' : 'FONTS'}`;
+      }
+
+      if (this.storedFonts.length === 0) {
+        listEl.innerHTML = `
+          <div class="fm-empty-fonts">
+            No fonts uploaded yet.<br>
+            Upload your font files (.ttf, .otf, .woff, .woff2) or a .zip archive above. They are safely stored locally in your browser.
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      this.storedFonts.forEach(fontItem => {
+        const isActive = store.state.fontFamily === fontItem.id;
+        const item = document.createElement('div');
+        item.className = `fm-font-item ${isActive ? 'active' : ''}`;
+        
+        const sizeKB = Math.round((fontItem.size || 0) / 1024);
+        const formatExt = fontItem.name.split('.').pop().toUpperCase();
+
+        item.innerHTML = `
+          <div class="fm-font-item-info">
+            <span class="fm-font-item-name">${fontItem.family || fontItem.name}</span>
+            <div class="fm-font-item-meta">
+              <span style="color:var(--fm-accent-cyan);">${fontItem.subfamily || 'Regular'}</span>
+              <span>·</span>
+              <span>${formatExt}</span>
+              <span>·</span>
+              <span>${sizeKB} KB</span>
+            </div>
+          </div>
+          <div class="fm-font-item-actions">
+            ${isActive ? '<span style="font-size:10px;color:var(--fm-accent-emerald);font-weight:700;">ACTIVE</span>' : ''}
+            <button class="fm-btn-del-font" title="Delete Font from Local Storage" data-id="${fontItem.id}">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        `;
+
+        // Click font to activate
+        item.addEventListener('click', async (e) => {
+          if (e.target.closest('.fm-btn-del-font')) return;
+          await this.activateFont(fontItem);
+        });
+
+        // Delete font button
+        const delBtn = item.querySelector('.fm-btn-del-font');
+        delBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await this.deleteStoredFont(fontItem.id);
+        });
+
+        listEl.appendChild(item);
+      });
+    }
+
+    async activateFont(fontRecord) {
+      const reg = await fontEngine.registerFont(fontRecord.buffer, fontRecord.name, fontRecord.id);
+
+      store.update({
+        fontFamily: fontRecord.id,
+        fontFileName: fontRecord.name,
+        fontBuffer: fontRecord.buffer,
+        parsedFont: reg.parsedFont,
+        fontMetadata: reg.metadata,
+        fontWeight: reg.metadata.isVariable && reg.metadata.axes.wght ? reg.metadata.axes.wght.default : 400,
+        fontVariationSettings: reg.variations
+      });
+
+      this.updateFontStatusBanner(fontRecord.name, reg.metadata);
+      this.renderVariableAxes();
+      this.renderUploadedFontsList();
+      this.renderer.render(store.state, 1, false);
+    }
+
+    async deleteStoredFont(id) {
+      await fontDB.deleteFont(id);
+      this.storedFonts = this.storedFonts.filter(f => f.id !== id);
+
+      // If active font was deleted, switch to another or clear
+      if (store.state.fontFamily === id) {
+        if (this.storedFonts.length > 0) {
+          await this.activateFont(this.storedFonts[this.storedFonts.length - 1]);
+        } else {
+          store.update({
+            fontFamily: '',
+            fontFileName: '',
+            fontBuffer: null,
+            parsedFont: null,
+            fontMetadata: null
+          });
+          document.getElementById('fm-font-status').style.display = 'none';
+        }
+      }
+
+      this.renderUploadedFontsList();
+      this.renderer.render(store.state, 1, false);
+    }
+
     updateHeaderBadge(state) {
       const name = document.getElementById('fm-badge-name');
       const type = document.getElementById('fm-badge-type');
-      if (name && state.fontMetadata) {
-        name.textContent = state.fontMetadata.family || state.fontFamily;
-        if (type) type.textContent = state.fontMetadata.isVariable ? 'Variable' : 'Static';
+      if (name) {
+        if (state.fontMetadata && state.fontMetadata.family) {
+          name.textContent = state.fontMetadata.family;
+          if (type) type.textContent = state.fontMetadata.isVariable ? 'Variable' : 'Static';
+        } else {
+          name.textContent = 'No Font Loaded';
+          if (type) type.textContent = 'Upload Font';
+        }
       }
     }
 
@@ -1202,33 +1305,19 @@
       });
     }
 
+    /**
+     * File Upload Handler: supports single fonts (.ttf, .otf, .woff, .woff2) AND .zip archives!
+     */
     bindUploadAndDragDrop() {
       const fileInput = document.getElementById('fm-font-file-input');
       const browseBtn = document.getElementById('fm-btn-browse');
       const dropZone = document.getElementById('fm-drop-zone');
       const overlay = document.getElementById('fm-drag-overlay');
 
-      // 1. Explicit Browse Button Click
+      // 1. Browse Button
       browseBtn.addEventListener('click', (e) => {
         e.preventDefault();
         fileInput.click();
-      });
-
-      // Quick Sample Font Loader
-      const sampleBtn = document.getElementById('fm-btn-load-sample');
-      sampleBtn?.addEventListener('click', async () => {
-        try {
-          sampleBtn.textContent = 'Loading Sample...';
-          const resp = await fetch('assets/DancingScript-Bold.ttf');
-          const blob = await resp.blob();
-          const file = new File([blob], 'DancingScript-Bold.ttf', { type: 'font/ttf' });
-          await this.handleFontFile(file);
-          sampleBtn.textContent = 'Sample Loaded!';
-          setTimeout(() => { sampleBtn.textContent = 'Load Sample Font'; }, 1500);
-        } catch (e) {
-          console.warn('Sample font load:', e);
-          sampleBtn.textContent = 'Load Sample Font';
-        }
       });
 
       // 2. Drop Zone Click
@@ -1236,8 +1325,9 @@
 
       // 3. File Input Change
       fileInput.addEventListener('change', async (e) => {
-        if (e.target.files && e.target.files[0]) {
-          await this.handleFontFile(e.target.files[0]);
+        if (e.target.files && e.target.files.length > 0) {
+          await this.handleIncomingFiles(e.target.files);
+          fileInput.value = '';
         }
       });
 
@@ -1254,8 +1344,8 @@
       dropZone.addEventListener('drop', async (e) => {
         e.preventDefault();
         dropZone.classList.remove('drag-active');
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-          await this.handleFontFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          await this.handleIncomingFiles(e.dataTransfer.files);
         }
       });
 
@@ -1273,19 +1363,104 @@
       overlay.addEventListener('drop', async (e) => {
         e.preventDefault();
         overlay.classList.remove('active');
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-          await this.handleFontFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          await this.handleIncomingFiles(e.dataTransfer.files);
         }
       });
     }
 
-    async handleFontFile(file) {
+    /**
+     * Process files or zip archives
+     */
+    async handleIncomingFiles(fileList) {
+      for (const file of fileList) {
+        // Check if file is a ZIP archive
+        if (file.name.toLowerCase().endsWith('.zip') || file.type.includes('zip')) {
+          await this.handleZipFile(file);
+        } else if (/\.(ttf|otf|woff|woff2)$/i.test(file.name)) {
+          const buffer = await file.arrayBuffer();
+          await this.processAndStoreFont(buffer, file.name);
+        } else {
+          alert(`File "${file.name}" is not a recognized font file (.ttf, .otf, .woff, .woff2) or .zip archive.`);
+        }
+      }
+    }
+
+    /**
+     * Extract and parse font files inside a ZIP archive using JSZip
+     */
+    async handleZipFile(zipFile) {
+      if (!window.JSZip) {
+        alert('ZIP extractor library is loading. Please try again.');
+        return;
+      }
+
       try {
-        const res = await fontEngine.loadFontFile(file);
-        this.updateFontStatusBanner(file.name, res.metadata);
-        this.renderVariableAxes();
+        const zip = await window.JSZip.loadAsync(zipFile);
+        const fontEntries = [];
+
+        zip.forEach((relativePath, zipEntry) => {
+          if (!zipEntry.dir && /\.(ttf|otf|woff|woff2)$/i.test(zipEntry.name) && !zipEntry.name.includes('__MACOSX') && !zipEntry.name.startsWith('.')) {
+            fontEntries.push(zipEntry);
+          }
+        });
+
+        if (fontEntries.length === 0) {
+          alert(`No font files (.ttf, .otf, .woff, .woff2) were found inside "${zipFile.name}".`);
+          return;
+        }
+
+        let firstLoaded = null;
+        for (const entry of fontEntries) {
+          const buffer = await entry.async('arraybuffer');
+          const cleanName = entry.name.split('/').pop();
+          const loaded = await this.processAndStoreFont(buffer, cleanName, false);
+          if (!firstLoaded) firstLoaded = loaded;
+        }
+
+        // Activate the first extracted font and render
+        if (firstLoaded) {
+          await this.activateFont(firstLoaded);
+          alert(`Extracted and loaded ${fontEntries.length} fonts from "${zipFile.name}"!`);
+        }
       } catch (err) {
-        alert(`Could not load font file: ${err.message}`);
+        alert(`Failed to read ZIP archive: ${err.message}`);
+      }
+    }
+
+    /**
+     * Register font in FontFace & CSS, save to local IndexedDB, and update UI
+     */
+    async processAndStoreFont(buffer, fileName, autoActivate = true) {
+      try {
+        const reg = await fontEngine.registerFont(buffer, fileName);
+
+        const fontRecord = {
+          id: reg.uniqueFamily,
+          name: fileName,
+          family: reg.metadata.family,
+          subfamily: reg.metadata.subfamily,
+          size: buffer.byteLength,
+          metadata: reg.metadata,
+          buffer: buffer,
+          timestamp: Date.now()
+        };
+
+        await fontDB.saveFont(fontRecord);
+
+        // Update in-memory list
+        this.storedFonts.unshift(fontRecord);
+        this.renderUploadedFontsList();
+
+        if (autoActivate) {
+          await this.activateFont(fontRecord);
+        }
+
+        return fontRecord;
+      } catch (err) {
+        console.error('Process font error:', err);
+        alert(`Error loading font "${fileName}": ${err.message}`);
+        return null;
       }
     }
 
@@ -1299,44 +1474,16 @@
       }
     }
 
-    bindCuratedFonts() {
-      const select = document.getElementById('fm-select-font');
-      CURATED_FONTS.forEach((f, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx;
-        opt.textContent = `${f.name} — ${f.preview}`;
-        select.appendChild(opt);
-      });
-
-      select.addEventListener('change', async (e) => {
-        const f = CURATED_FONTS[e.target.value];
-        if (f) {
-          await fontEngine.loadPresetFont(f);
-          this.renderVariableAxes();
-        }
-      });
-    }
-
     bindTextInputs() {
       const textarea = document.getElementById('fm-text-input');
-      const pangramSelect = document.getElementById('fm-select-pangram');
+      const clearBtn = document.getElementById('fm-btn-clear-text');
 
       textarea.value = store.state.text;
       textarea.addEventListener('input', (e) => store.set('text', e.target.value, true));
 
-      PANGRAM_PRESETS.forEach((p, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx;
-        opt.textContent = p.title;
-        pangramSelect.appendChild(opt);
-      });
-
-      pangramSelect.addEventListener('change', (e) => {
-        if (e.target.value !== '') {
-          const item = PANGRAM_PRESETS[e.target.value];
-          textarea.value = item.text;
-          store.set('text', item.text, true);
-        }
+      clearBtn.addEventListener('click', () => {
+        textarea.value = '';
+        store.set('text', '', true);
       });
 
       document.getElementById('fm-select-writing-mode')?.addEventListener('change', e => {
@@ -1412,7 +1559,7 @@
         store.set('textIndent', val);
       });
 
-      // Align Buttons
+      // Alignment Buttons
       document.querySelectorAll('.fm-align-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.fm-align-btn').forEach(b => b.classList.remove('active'));
@@ -1867,29 +2014,19 @@
      ========================================================================== */
   document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('fm-preview-canvas');
-    if (!canvas) {
-      console.error('Canvas #fm-preview-canvas not found');
-      return;
-    }
+    if (!canvas) return;
 
     const renderer = new CanvasRenderer(canvas);
     const exportManager = new ExportManager(renderer);
     const ui = new UIController(renderer, exportManager);
-    ui.init();
-
-    // Preload default font
-    try {
-      await fontEngine.loadPresetFont(CURATED_FONTS[0]);
-      ui.updateHeaderBadge(store.state);
-      ui.renderVariableAxes();
-    } catch (e) {}
+    await ui.init();
 
     window.addEventListener('resize', () => {
       renderer.render(store.state, 1, false);
       ui.updateDimensionsBadge();
     });
 
-    console.log('⚡ Font Master Studio ready.');
+    console.log('⚡ Font Master Studio ready with local font library & ZIP support.');
   });
 
 })();

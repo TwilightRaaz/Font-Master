@@ -1029,3 +1029,98 @@ html, body {
     pointer-events: auto;
   }
 }
+
+/* ==========================================================================
+   Uploaded Fonts Library & Management (IndexedDB)
+   ========================================================================== */
+.fm-font-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.fm-font-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--fm-bg-input);
+  border: 1px solid var(--fm-border-subtle);
+  border-radius: var(--fm-radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.fm-font-item:hover {
+  border-color: var(--fm-border-medium);
+  background: var(--fm-bg-hover);
+}
+.fm-font-item.active {
+  border-color: var(--fm-accent-violet);
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+}
+
+.fm-font-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fm-font-item-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fm-text-title);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fm-font-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--fm-text-muted);
+  font-family: var(--fm-font-mono);
+}
+
+.fm-font-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.fm-btn-del-font {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--fm-radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fm-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.fm-btn-del-font:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.fm-empty-fonts {
+  padding: 16px;
+  text-align: center;
+  background: var(--fm-bg-input);
+  border: 1px dashed var(--fm-border-subtle);
+  border-radius: var(--fm-radius-md);
+  color: var(--fm-text-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
